@@ -9,18 +9,21 @@ from Grasshopper.Kernel.Data import GH_Path
 from Rhino.Geometry import Point3d
 
 def scale_to_fit(points, max_size=100):
-    """Scales all points proportionally while keeping them aligned."""
+    """Scales all points proportionally while keeping them aligned, including elevation."""
     min_x = min(p[0] for p in points)
     max_x = max(p[0] for p in points)
     min_y = min(p[1] for p in points)
     max_y = max(p[1] for p in points)
+    min_z = min(p[2] for p in points)
+    max_z = max(p[2] for p in points)
     
     range_x = max_x - min_x
     range_y = max_y - min_y
-    scale_factor = max_size / max(range_x, range_y)
+    range_z = max_z - min_z
+    scale_factor = max_size / max(range_x, range_y, range_z)
 
     scaled_points = [
-        ((p[0] - min_x) * scale_factor, (p[1] - min_y) * scale_factor, p[2])
+        ((p[0] - min_x) * scale_factor, (p[1] - min_y) * scale_factor, (p[2] - min_z) * scale_factor)
         for p in points
     ]
     return scaled_points
