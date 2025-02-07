@@ -3,8 +3,11 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import clr
 clr.AddReference("Grasshopper")
+clr.AddReference("RhinoCommon")
 from Grasshopper import DataTree
 from Grasshopper.Kernel.Data import GH_Path
+import ghpythonlib.components as ghcomp
+from Rhino.Geometry import Point3d
 
 def remap(value, old_min, old_max, new_min, new_max):
     """Remaps a value from one range to another, handling zero-division errors."""
@@ -25,10 +28,9 @@ topology_data = [
 ]
 
 # Extract valid points and compute bounds
+topology_data.pop(0)  # Remove header
 valid_points = []
 for line in topology_data:
-    if not line[0].isdigit():  # Skip header row
-        continue
     x, y, z = map(float, line.split(","))
     if z != 32767.0:  # Filter out invalid values
         valid_points.append((x, y, z))
@@ -47,16 +49,17 @@ else:
 
     # Create Rhino points and store them in a DataTree
     point_tree = DataTree[object]()
+    rhino_points = []
     for index, (x, y, z) in enumerate(remapped_points):
-        pt = rs.AddPoint(x, y, z)
+        pt = Point3d(x, y, z)  # Convert to Rhino Point3d
         path = GH_Path(index)
         point_tree.Add(pt, path)
+        rhino_points.append(pt)
 
     # Create a Delaunay mesh from points if enough exist
     mesh = None
-    if len(remapped_points) > 2:
-        mesh = rs.AddMesh([rs.coerce3dpoint(pt) for pt in point_tree.AllData()])
-        rs.ObjectColor(mesh, (200, 200, 200))  # Set mesh color to gray
+    if len(rhino_points) > 2:
+        mesh = ghcomp.DelaunayMesh(rhino_points)  # Use Grasshopper's built-in Delaunay mesh component
 
     # Assign outputs
     a = point_tree  # DataTree of points
