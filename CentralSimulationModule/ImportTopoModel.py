@@ -4,6 +4,7 @@ import scriptcontext as sc
 
 # Raw input data as a list of strings
 topology_data = [
+    "X,Y,Z",  # Example header, will be skipped
     "-2012355.0,2765325.0,32767.0",
     "-2012325.0,2765325.0,32767.0",
     "-2012295.0,2765325.0,32767.0",
@@ -19,6 +20,8 @@ scale_factor = 0.001  # Adjust as needed
 # Process input data
 topology_points = []
 for line in topology_data:
+    if not line[0].isdigit():  # Skip header row or any non-numeric lines
+        continue
     x, y, z = map(float, line.split(","))
     if z != 32767.0:  # Filter out invalid values
         x, y = x * scale_factor, y * scale_factor  # Apply scaling
