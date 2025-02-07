@@ -1,24 +1,56 @@
 import Rhino
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
-import csv
+import clr
+clr.AddReference("Grasshopper")
+clr.AddReference("RhinoCommon")
+from Grasshopper import DataTree
+from Grasshopper.Kernel.Data import GH_Path
+from Rhino.Geometry import Point3d
 
-# Input: Path to the processed fuel model CSV file
-csv_path = "processed_fuel_model_data.csv"  # Update with actual path
+def scale_to_fit(points, max_size=100):
+    """Scales all points proportionally to fit within a max_size x max_size bounding box while preserving relative proportions."""
+    min_x = min(p[0] for p in points)
+    max_x = max(p[0] for p in points)
+    min_y = min(p[1] for p in points)
+    max_y = max(p[1] for p in points)
+    
+    range_x = max_x - min_x
+    range_y = max_y - min_y
+    scale_factor = max_size / max(range_x, range_y)
+    
+    scaled_points = [
+        ((p[0] - min_x) * scale_factor, (p[1] - min_y) * scale_factor, 0)
+        for p in points
+    ]
+    return scaled_points
 
-# Read CSV file and extract X, Y, Fuel_Model, Burn_Probability
-fuel_points = []
-with open(csv_path, 'r') as file:
-    reader = csv.reader(file)
-    next(reader)  # Skip header
-    for row in reader:
-        x, y, fuel_model, burn_prob = map(float, row)
-        fuel_points.append((x, y, fuel_model, burn_prob))
+# Raw input data as a list of strings
+fuel_data = [
+    "X,Y,Fuel_Model,Burn_Probability",
+    "-2010645.0,2765325.0,10.0,0.5",
+    "-2010615.0,2765325.0,9.0,0.4"
+]
 
-# Create points in Rhino based on fuel model locations
-for x, y, fuel_model, burn_prob in fuel_points:
-    pt = rs.AddPoint(x, y, 0)  # Set elevation to 0 for 2D visualization
-    color = (int(255 * burn_prob), 0, 255 - int(255 * burn_prob))  # Color based on burn probability
-    rs.ObjectColor(pt, color)
+# Extract valid fuel model points
+fuel_data.pop(0)  # Remove header
+valid_points = []
+burn_probs = []
+for line in fuel_data:
+    x, y, fuel_model, burn_prob = map(float, line.split(","))
+    valid_points.append((x, y, fuel_model))
+    burn_probs.append(burn_prob)
 
-print("Fuel Model Data Imported Successfully!")
+if not valid_points:
+    a = "No valid points found."
+else:
+    # Scale all points proportionally to fit within 100x100
+    scaled_points = scale_to_fit(valid_points, max_size=100)
+
+    # Create Rhino points for Grasshopper
+    rhino_points = [Point3d(x, y, 0) for x, y, _ in scaled_points]
+    
+    a = rhino_points  # List of points
+    b = burn_probs  # Corresponding burn probabilities
+
+print("Fuel Model Data Processed and Scaled Successfully!")
