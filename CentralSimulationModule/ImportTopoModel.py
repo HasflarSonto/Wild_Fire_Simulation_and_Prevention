@@ -1,28 +1,30 @@
 import Rhino
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
-import csv
 
-# Input: Path to the processed fuel model CSV file
-csv_path = "processed_fuel_model_data.csv"  # Update with actual path
+# Raw input data (replace with actual input if needed)
+topology_data = envi
 
 # Scaling factor to remap coordinates to a manageable Rhino scale
-scale_factor = 0.001  # Adjust as needed for better visualization
+scale_factor = 0.001  # Adjust as needed
 
-# Read CSV file and extract X, Y, Fuel_Model, Burn_Probability
-fuel_points = []
-with open(csv_path, 'r') as file:
-    reader = csv.reader(file)
-    next(reader)  # Skip header
-    for row in reader:
-        x, y, fuel_model, burn_prob = map(float, row)
-        x, y = x * scale_factor, y * scale_factor  # Apply scaling to X, Y
-        fuel_points.append((x, y, fuel_model, burn_prob))
+# Process input data
+topology_points = []
+for line in topology_data.strip().split("\n"):
+    x, y, z = map(float, line.split(","))
+    if z != 32767.0:  # Filter out invalid values
+        x, y = x * scale_factor, y * scale_factor  # Apply scaling
+        topology_points.append((x, y, z))
 
-# Create points in Rhino based on fuel model locations
-for x, y, fuel_model, burn_prob in fuel_points:
-    pt = rs.AddPoint(x, y, 0)  # Set elevation to 0 for 2D visualization
-    color = (int(255 * burn_prob), 0, 255 - int(255 * burn_prob))  # Color based on burn probability
-    rs.ObjectColor(pt, color)
+# Create points in Rhino based on topology locations
+topology_rhino_points = []
+for x, y, z in topology_points:
+    pt = rs.AddPoint(x, y, z)
+    topology_rhino_points.append(pt)
 
-print("Fuel Model Data Imported, Scaled, and Visualized Successfully!")
+# Create a Delaunay mesh from points
+if topology_rhino_points:
+    mesh = rs.AddMesh(topology_rhino_points)
+    rs.ObjectColor(mesh, (200, 200, 200))  # Gray color for terrain
+
+print("Topology Data Processed, Scaled, and Mesh Created Successfully!")
