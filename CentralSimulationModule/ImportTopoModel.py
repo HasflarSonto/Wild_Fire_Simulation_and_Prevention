@@ -46,8 +46,15 @@ for x, y, z in scaled_points:
     topology_rhino_points.append(pt)
 
 # Create a Delaunay mesh from points
-if topology_rhino_points:
+mesh = None
+if len(topology_rhino_points) > 2:  # Ensure there are enough points for a mesh
     mesh = rs.AddMesh(topology_rhino_points)
     rs.ObjectColor(mesh, (200, 200, 200))  # Gray color for terrain
+
+# Assign outputs for Grasshopper
+sc.doc = Rhino.RhinoDoc.ActiveDoc  # Ensure Rhino context is active
+a = topology_rhino_points if topology_rhino_points else None
+b = mesh if mesh else None
+sc.doc = ghdoc  # Reset to Grasshopper document
 
 print("Topology Data Processed, Scaled to 100x100, and Mesh Created Successfully!")
