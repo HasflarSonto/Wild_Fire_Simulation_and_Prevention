@@ -6,8 +6,7 @@ clr.AddReference("Grasshopper")
 clr.AddReference("RhinoCommon")
 from Grasshopper import DataTree
 from Grasshopper.Kernel.Data import GH_Path
-import ghpythonlib.components as ghcomp
-from Rhino.Geometry import Point3d
+from Rhino.Geometry import Point3d, Mesh, Delaunay
 
 def remap(value, old_min, old_max, new_min, new_max):
     """Remaps a value from one range to another, handling zero-division errors."""
@@ -59,7 +58,7 @@ else:
     # Create a Delaunay mesh from points if enough exist
     mesh = None
     if len(rhino_points) > 2:
-        mesh = ghcomp.DelaunayMesh(rhino_points)  # Use Grasshopper's built-in Delaunay mesh component
+        mesh = Delaunay.Solver.Solve(rhino_points)  # Use Rhino's built-in Delaunay solver
 
     # Assign outputs
     a = point_tree  # DataTree of points
