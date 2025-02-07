@@ -29,13 +29,15 @@ def scale_to_fit(points, max_size=100):
 topo_data = [
     "X,Y,Elevation",
     "-2010645.0,2765325.0,547.0",
-    "-2010615.0,2765325.0,560.0"
+    "-2010615.0,2765325.0,560.0",
+    "-2010585.0,2765325.0,32767.0"  # No-data elevation
 ]
 
 fuel_data = [
     "X,Y,Fuel_Model,Burn_Probability",
     "-2010645.0,2765325.0,10.0,0.5",
-    "-2010615.0,2765325.0,9.0,0.4"
+    "-2010615.0,2765325.0,9.0,0.4",
+    "-2010585.0,2765325.0,8.0,0.3"
 ]
 
 # Extract valid points
@@ -46,6 +48,10 @@ topo_points, fuel_points, burn_probs = [], [], []
 for topo_line, fuel_line in zip(topo_data, fuel_data):
     x_t, y_t, elevation = map(float, topo_line.split(","))
     x_f, y_f, fuel_model, burn_prob = map(float, fuel_line.split(","))
+    
+    # Exclude no-data elevation values
+    if elevation == 32767.0:
+        continue
     
     # Ensure coordinates match
     if (x_t, y_t) == (x_f, y_f):
@@ -66,4 +72,4 @@ else:
     a = rhino_points  # Aligned list of scaled points
     b = burn_probs    # Burn probability values
 
-print("Elevation and Fuel Model Data Processed & Scaled Successfully!")
+print("Elevation and Fuel Model Data Processed, No-Data Values Removed, and Scaled Successfully!")
