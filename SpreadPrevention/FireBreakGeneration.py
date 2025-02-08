@@ -70,13 +70,25 @@ farm = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 wind_vector = (3,7)
 
-def create_firebreak_land(mat, fire_break_position):
-    for x,y in fire_break_position:
-        mat[x][y] = 0
+
+
+def create_firebreak_land(mat, walls, strips):
+    rows, cols = len(mat), len(mat[0])
+
+    print(walls)
+
+    for m in range(rows):
+        for n in range(cols):
+            if (m,n) in walls:
+                mat[m][n] = True
+            else:
+                mat[m][n] = False
+
+    return mat
 
 def find_matrix_bounds(mat):
-    high_x, high_y = float('-inf')
-    low_x, low_y = float('inf')
+    high_x, high_y = float('-inf'), float('-inf')
+    low_x, low_y = float('inf'), float('inf')
 
     rows, cols = len(mat), len(mat[0])
 
@@ -90,8 +102,8 @@ def find_matrix_bounds(mat):
     return high_x, low_x, high_y, low_y
 
 def find_cluster_bounds(cluster):
-    high_x, high_y = float('-inf')
-    low_x, low_y = float('inf')
+    high_x, high_y = float('-inf'), float('-inf')
+    low_x, low_y = float('inf'), float('inf')
 
     for c in cluster:
         high_x = max(c[0], high_x)
@@ -102,31 +114,31 @@ def find_cluster_bounds(cluster):
     return high_x, low_x, high_y, low_y
 
 def create_bound(high_cluster_x, low_cluster_x, high_cluster_y, low_cluster_y):
-    boundary = []
+    boundary = set()
 
     for x in range(low_cluster_x, high_cluster_x + 1):
-        boundary.append((x, low_cluster_y)) 
-        boundary.append((x, high_cluster_y))
+        boundary.add((x, low_cluster_y))
+        boundary.add((x, high_cluster_y)) 
 
-    # Left and Right boundaries
     for y in range(low_cluster_y, high_cluster_y + 1):
-        boundary.append((low_cluster_x, y))
-        boundary.append((high_cluster_x, y))
+        boundary.add((low_cluster_x, y))
+        boundary.add((high_cluster_x, y))
 
     return boundary
+
         
 def generate_structures(farm_mat, landX, landY, burn_cluster, wall_threshold):
     heuristic_cluster = assign_heuristic(burn_cluster, *find_matrix_bounds(farm), landX, landY, 0.3, 10)
 
-    wall_generation = []
+    wall_generation = set()
     strip_generation = []
 
     for info, coords in heuristic_cluster.items():
         if len(coords) < wall_threshold:
-            wall_generation.append(create_bound(*find_cluster_bounds(coords)))
+            wall_generation.update(create_bound(*find_cluster_bounds(coords)))
             continue
 
-    return heuristic_cluster
+    return wall_generation
 
 def assign_heuristic(burn_cluster, high_farm_x, low_farm_x, high_farm_y, low_farm_y, land_len_x, land_len_y, decay_constant, chop):
     heuristic_cluster = {}
@@ -209,7 +221,6 @@ def find_burn_probability_clusters(mat, threshold, cluster_size):
     
     return burn_clusters
 
-if __name__ == "__main__":
-    clusters = find_burn_probability_clusters(farmland_matrix, 0.5, 4)
-
-    print(clusters)
+clusters = find_burn_probability_clusters(farmland_matrix, 0.9, 4)
+walls = generate_structures(farm, len(farmland_matrix), len(farmland_matrix[0]), clusters, 10)
+new_matrix = create_firebreak_land(farmland_matrix, walls, [])
