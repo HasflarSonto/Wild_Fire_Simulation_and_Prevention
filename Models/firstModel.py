@@ -106,10 +106,25 @@ def spread_fire(fire_grid):
     return new_fire_grid
 
 # Run simulation for a few steps
+res = []
 fire_grid = grid
-for step in range(100):
+for step in range(30):
     print(f"Step {step+1}:")
     fire_grid = spread_fire(fire_grid)
+    res.append(fire_grid)
     print(fire_grid)
     print()
 
+#res is a matrix of matricies
+
+
+def save_matrix_to_txt(matrix, filename):
+    """Saves a matrix to a text file, with each row on a new line and elements space-separated."""
+    with open(filename, 'w') as file:
+        for row in matrix:
+            file.write(' '.join(map(str, row)) + '\n')
+
+# Example usage:
+
+file_path = "matrix.txt"
+save_matrix_to_txt(res, file_path)
