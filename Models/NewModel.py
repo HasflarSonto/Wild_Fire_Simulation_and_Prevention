@@ -50,29 +50,29 @@ def find_fire_start(grid, wind_vector):
     if x < 0 and yInterval:
         
         for r in yInterval:
-            heapq.heappush(hp, (r, len(grid[0])-1))
+            heapq.heappush(hp, [(grid[r][len(grid[0])-1]),(r, len(grid[0])-1)])
     elif x > 0 and yInterval:
         for r in yInterval:
-            heapq.heappush(hp, (r, 0))
+            heapq.heappush(hp, [(grid[r][0]),(r, 0)])
     elif yInterval:
         
         for r in yInterval:
-            heapq.heappush(hp, (r, int(len(grid[0])//2) ))
+            heapq.heappush(hp, [grid[r][len(grid[0])//2], (r, int(len(grid[0])//2) )])
     if y < 0 and xInterval:
         for c in xInterval:
-            heapq.heappush(hp, (0, c))
+            heapq.heappush(hp, [grid[0][c], (0, c)])
     elif y > 0 and xInterval:
         for c in xInterval:
-            heapq.heappush(hp, (len(grid)-1 , c))
+            heapq.heappush(hp, [grid[len(grid)-1][c], (len(grid)-1 , c)])
     elif xInterval:
-        heapq.heappush(hp, (int(len(grid)//2), c))
-    res = hp[0]
+        heapq.heappush(hp, [grid[int(len(grid)//2)][c], (int(len(grid)//2), c)])
+    res = hp[0][1]
     while len(hp) > 10:
         heapq.heappop(hp)
     
     for i in range(random.randint(1, len(hp))):
         res = heapq.heappop(hp)
-    return res
+    return res[1]
     
 
 def calculate_fire_probability(material, direction_vector, wind_vector):
