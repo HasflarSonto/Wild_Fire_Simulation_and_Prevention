@@ -55,15 +55,16 @@ def spread_fire(grid, wind_vector, steps=10):
         #probabilityMatrix = [[0]*len(grid[0]) for row in grid]
         for i in range(rows):
             for j in range(cols):
-                if new_fire_grid[i][j] == 1: # Tile is on fire
+                if (i,j) in timer: # Tile is on fire
                     timer[(i, j)] -= 1
                     if timer[(i, j)] <= 0:
                         new_fire_grid[i][j] = -1  # Burnt out
+                        timer.pop(i,j)
                         continue
                     for di, dj in coordinates:
                         ni, nj = i + di, j + dj
 
-                        if 0 <= ni < rows and 0 <= nj < cols:
+                        if 0 <= ni < rows and 0 <= nj < cols and (ni,nj) not in timer:
                             material = grid[ni][nj]
                             # #di changes the y
                             # #dj chnages the x
@@ -72,8 +73,6 @@ def spread_fire(grid, wind_vector, steps=10):
                             if random.random() < probabilityMatrix[ni][nj]:
                                 new_fire_grid[ni][nj] = 1
                                 timer[(ni,nj)] = material_timer[material]
-                            
-
     return new_fire_grid
 
 def matrix_to_list(matrix):
