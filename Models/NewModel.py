@@ -1,21 +1,20 @@
 import random
 import math
 
-def compute_wind_severity(direction_vector, wind_vector):
+wind_vector = (-1,3)
+windVectors = []
+windVectors.append(wind_vector)
+for i in range(9,5,-1):
+        newMagnitude = i * 0.10
+        newX = newMagnitude * wind_vector[0] * math.cos(1 - newMagnitude)
+        newY = newMagnitude * wind_vector[1] * math.sin(1 - newMagnitude)
+        windVectors.append([newX,newY])
+def compute_wind_severity(direction_vector, windVectors):
     """Calculates wind severity in a given direction."""
-    windVectors = []
-    windVectors.append(wind_vector)
-
     magnitude = (direction_vector[0]**2 + direction_vector[1]**2) ** 0.5
     if magnitude == 0:
         return 0
-    x = wind_vector[0]
-    y = wind_vector[1]
-    for i in range(9,5,-1):
-        newMagnitude = i * 0.10
-        newX = newMagnitude * x * math.cos(1 - newMagnitude)
-        newY = newMagnitude * y * math.sin(1 - newMagnitude)
-        windVectors.append([newX,newY])
+    
     unit_vector = (direction_vector[0] / magnitude, direction_vector[1] / magnitude)
 
     maxSeverity = 0
@@ -68,24 +67,12 @@ def spread_fire(grid, wind_vector, steps=10):
                             material = grid[ni][nj]
                             # #di changes the y
                             # #dj chnages the x
-                            new_prob = calculate_fire_probability(material, (dj, -di), wind_vector)
+                            new_prob = calculate_fire_probability(material, (dj, -di), windVectors)
                             probabilityMatrix[ni][nj] = max(probabilityMatrix[ni][nj],new_prob)
-                            
-                            countProb = 0
-                            for c in range(25):
-                                if random.random() < probabilityMatrix[ni][nj]:
-                                    countProb += 1
-                            if countProb > 13:
+                            if random.random() < probabilityMatrix[ni][nj]:
                                 new_fire_grid[ni][nj] = 1
                                 timer[(ni,nj)] = material_timer[material]
                             
-        print("\nStep " + str(_) + "\n")
-        for row in probabilityMatrix:
-            print(row)
-        
-        print("\n")
-        for row in new_fire_grid:
-            print(row)
 
     return new_fire_grid
 
@@ -101,7 +88,7 @@ def matrix_to_list(matrix):
 grid = [[0.3, 0.4, 0.4], 
         [0.3, 0.3, 0.4], 
         [0.3, 0.3, 0.5]]
-wind_vector = (-1,3)
+
 def simulate_fire(grid, wind_vector):
     final_fire_grid = spread_fire(grid, wind_vector)
     a = final_fire_grid
