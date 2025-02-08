@@ -127,8 +127,6 @@ def assign_heuristic(burn_cluster, high_farm_x, low_farm_x, high_farm_y, low_far
         portions = MOI/chop
 
 
-        
-    
         distance_heuristic = math.exp(-decay_constant * distance_from_farm)
         spread_heuristic = portions
         size_heuristic = 
