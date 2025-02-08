@@ -70,7 +70,7 @@ farm = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 wind_vector = (3,7)
 
-def create_firebreak(mat, fire_break_position):
+def create_firebreak_land(mat, fire_break_position):
     for x,y in fire_break_position:
         mat[x][y] = 0
 
@@ -100,16 +100,38 @@ def find_cluster_bounds(cluster):
         low_y = min(c[1], low_y)
     
     return high_x, low_x, high_y, low_y
+
+def create_bound(high_cluster_x, low_cluster_x, high_cluster_y, low_cluster_y):
+    boundary = []
+
+    for x in range(low_cluster_x, high_cluster_x + 1):
+        boundary.append((x, low_cluster_y)) 
+        boundary.append((x, high_cluster_y))
+
+    # Left and Right boundaries
+    for y in range(low_cluster_y, high_cluster_y + 1):
+        boundary.append((low_cluster_x, y))
+        boundary.append((high_cluster_x, y))
+
+    return boundary
         
+def generate_structures(farm_mat, landX, landY, burn_cluster, wall_threshold):
+    heuristic_cluster = assign_heuristic(burn_cluster, *find_matrix_bounds(farm), landX, landY, 0.3, 10)
 
-def find_prevention_priority(farm_mat, burn_cluster):
-    high_farm_x, low_farm_x, high_farm_y, low_farm_y = find_matrix_bounds(farm_mat)
-    high_cluster_x, low_cluster_x, high_cluster_y, low_cluster_y = find_cluster_bounds(burn_cluster)
+    wall_generation = []
+    strip_generation = []
 
-def assign_heuristic(burn_cluster, high_farm_x, low_farm_x, high_farm_y, low_farm_y, decay_constant, chop):
+    for info, coords in heuristic_cluster.items():
+        if len(coords) < wall_threshold:
+            wall_generation.append(create_bound(*find_cluster_bounds(coords)))
+            continue
+
+    return heuristic_cluster
+
+def assign_heuristic(burn_cluster, high_farm_x, low_farm_x, high_farm_y, low_farm_y, land_len_x, land_len_y, decay_constant, chop):
     heuristic_cluster = {}
 
-    farm_center = (((high_farm_x + low_farm_x)/2), ((high_farm_y, low_farm_y)/2))
+    farm_center = (((high_farm_x + low_farm_x)/2), ((high_farm_y + low_farm_y)/2))
 
     for info, coords in burn_cluster.items():
         COM_x = info[0]
@@ -120,19 +142,17 @@ def assign_heuristic(burn_cluster, high_farm_x, low_farm_x, high_farm_y, low_far
             distance_from_farm = ((farm_center[0] - COM_x)**2 + (farm_center[1] - COM_y)**2)**0.5
         else:
             #automatically set the hueristic to 1 (HIGH PRIORITY)
-            new_info = (COM_x, COM_y, info[2], 1)
+            new_info = (COM_x, COM_y, info[2], 1, 1, 1)
             heuristic_cluster[new_info] = coords
             continue
-        
-        portions = MOI/chop
-
 
         distance_heuristic = math.exp(-decay_constant * distance_from_farm)
-        spread_heuristic = portions
-        size_heuristic = 
-        
-        heuristic = distance_heuristic 
+        spread_heuristic = MOI/chop
+        size_heuristic = len(coords) / (land_len_x * land_len_y)
 
+        new_info = (COM_x, COM_y, info[2], distance_heuristic, spread_heuristic, size_heuristic)
+        
+        heuristic_cluster[new_info] = coords 
 
     return heuristic_cluster
     
@@ -150,7 +170,7 @@ def find_burn_probability_clusters(mat, threshold, cluster_size):
         q.append((r,c))
 
         current_cluster = [(r,c)]
-        COM_x, Nx, COM_y, Ny = r, 1, c, 1
+        sum_x, sum_y, count = r, c, 1
 
         while q:
             row, col = q.popleft()
@@ -165,14 +185,13 @@ def find_burn_probability_clusters(mat, threshold, cluster_size):
                         visited_land.add((new_row, new_col))
                         q.append((new_row, new_col))
                         current_cluster.append((new_row, new_col))
-                        COM_x = (COM_x * Nx + new_row )/(Nx + 1)
-                        COM_y = (COM_y * Ny + new_col)/(Ny + 1)
-
-                        Nx += 1
-                        Ny += 1
+                        sum_x += new_row
+                        sum_y += new_col
+                        count += 1
         
         if len(current_cluster) >= cluster_size:
             moment_of_inertia = 0
+            COM_x, COM_y = sum_x / count, sum_y / count
 
             moment_of_inertia = sum(
                 ( (c[0] - COM_x) ** 2 + (c[1] - COM_y) ** 2 ) for c in current_cluster
