@@ -1,14 +1,29 @@
 import random
+import math
 
 def compute_wind_severity(direction_vector, wind_vector):
     """Calculates wind severity in a given direction."""
+    windVectors = []
+    windVectors.append(wind_vector)
+
     magnitude = (direction_vector[0]**2 + direction_vector[1]**2) ** 0.5
     if magnitude == 0:
         return 0
+    x = wind_vector[0]
+    y = wind_vector[1]
+    for i in range(9,5,-1):
+        newMagnitude = i * 0.10
+        newX = newMagnitude * x * math.cos(1 - newMagnitude)
+        newY = newMagnitude * y * math.sin(1 - newMagnitude)
+        windVectors.append([newX,newY])
     unit_vector = (direction_vector[0] / magnitude, direction_vector[1] / magnitude)
-    wind_magnitude = (wind_vector[0]**2 + wind_vector[1]**2) ** 0.5
-    wind_unit_vector = (wind_vector[0] / wind_magnitude, wind_vector[1] / wind_magnitude)
-    return unit_vector[0] * wind_unit_vector[0] + unit_vector[1] * wind_unit_vector[1]
+
+    maxSeverity = 0
+    for wind_vector in windVectors:
+        wind_magnitude = (wind_vector[0]**2 + wind_vector[1]**2) ** 0.5
+        wind_unit_vector = (wind_vector[0] / wind_magnitude, wind_vector[1] / wind_magnitude)
+        maxSeverity = max(maxSeverity, unit_vector[0] * wind_unit_vector[0] + unit_vector[1] * wind_unit_vector[1])
+    return maxSeverity
 
 def find_fire_start(grid, wind_vector):
     """Finds fire starting location based on wind direction."""
@@ -37,38 +52,32 @@ def spread_fire(grid, wind_vector, steps=10):
     probabilityMatrix = [[0]*len(grid[0]) for row in grid]
     probabilityMatrix[row][col] = 1
     coordinates = [(x, y) for x in range(-2, 3) for y in range(-2, 3) if not (x == 0 and y == 0)]
-
     for _ in range(steps):
         #probabilityMatrix = [[0]*len(grid[0]) for row in grid]
         for i in range(rows):
             for j in range(cols):
-                if new_fire_grid[i][j] == 1:  # Tile is on fire
+                if new_fire_grid[i][j] == 1: # Tile is on fire
                     timer[(i, j)] -= 1
                     if timer[(i, j)] <= 0:
                         new_fire_grid[i][j] = -1  # Burnt out
                         continue
                     for di, dj in coordinates:
                         ni, nj = i + di, j + dj
-                        if 0 <= ni < rows and 0 <= nj < cols and new_fire_grid[ni][nj] > 0 and new_fire_grid[ni][nj] < 1:
+
+                        if 0 <= ni < rows and 0 <= nj < cols:
                             material = grid[ni][nj]
-                            #di changes the y
-                            #dj chnages the x
+                            # #di changes the y
+                            # #dj chnages the x
                             new_prob = calculate_fire_probability(material, (dj, -di), wind_vector)
                             probabilityMatrix[ni][nj] = max(probabilityMatrix[ni][nj],new_prob)
                             
-        for r in range(len(probabilityMatrix)):
-            for c in range(len(probabilityMatrix[0])):
-                countProb = 0
-                for i in range(10):
-                    if random.random() < probabilityMatrix[r][c]:
-                        countProb += 1
-                if countProb > 4:
-                    # print("fire has changed")
-                    # print("random value was " + str(randVal))
-                    # print("fireProb was " + str(probabilityMatrix[r][c]))
-                    new_fire_grid[r][c] = 1.0
-                    timer[(r, c)] = material_timer[material]
-                            
+                            countProb = 0
+                            for c in range(25):
+                                if random.random() < probabilityMatrix[ni][nj]:
+                                    countProb += 1
+                            if countProb > 13:
+                                new_fire_grid[ni][nj] = 1
+                                timer[(ni,nj)] = material_timer[material]
                             
         print("\nStep " + str(_) + "\n")
         for row in probabilityMatrix:
@@ -77,8 +86,6 @@ def spread_fire(grid, wind_vector, steps=10):
         print("\n")
         for row in new_fire_grid:
             print(row)
-
-
 
     return new_fire_grid
 
@@ -104,21 +111,4 @@ def simulate_fire(grid, wind_vector):
     return a
 
 simulate_fire(grid,wind_vector)
-
-# def compute_wind_severity(direction_vector, wind_vector):
-#     """Calculates wind severity in a given direction."""
-#     magnitude = (direction_vector[0]**2 + direction_vector[1]**2) ** 0.5
-#     if magnitude == 0:
-#         return 0
-#     unit_vector = (direction_vector[0] / magnitude, direction_vector[1] / magnitude)
-#     wind_magnitude = (wind_vector[0]**2 + wind_vector[1]**2) ** 0.5
-#     wind_unit_vector = (wind_vector[0] / wind_magnitude, wind_vector[1] / wind_magnitude)
-#     return unit_vector[0] * wind_unit_vector[0] + unit_vector[1] * wind_unit_vector[1]
-
-
-# coordinates = [(x, y) for x in range(-2, 3) for y in range(-2, 3) if not (x == 0 and y == 0)]
-
-
-# for arr in coordinates:
-#     print (compute_wind_severity(arr,wind_vector))
 
