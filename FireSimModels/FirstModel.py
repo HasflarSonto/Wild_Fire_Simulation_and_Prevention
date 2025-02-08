@@ -54,8 +54,12 @@ def spread_fire(grid, wind_vector, steps=10):
     return fire_grid
 
 def matrix_to_list(matrix):
-    """Converts a 2D matrix into a single list of strings for matching back to points."""
-    return [str(cell) for row in matrix for cell in row]
+    """Converts a 2D matrix back into a structured single list of strings in row-major order."""
+    ordered_list = []
+    for row in matrix:
+        for cell in row:
+            ordered_list.append(str(cell))  # Convert each value back to a string
+    return ordered_list
 
 # Example Usage
 grid = [[0.3, 0.4, 0.4], [0.3, 0.3, 0.4], [0.3, 0.3, 0.5]]
