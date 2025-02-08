@@ -1,4 +1,5 @@
 import rasterio
+print("Rasterio is installed and working!")
 import numpy as np
 import csv
 
@@ -49,5 +50,7 @@ def process_raster_to_csv(tif_path, csv_path, is_fuel_model=False):
     print(f"Processed: {csv_path}")
 
 # Example Usage
-process_raster_to_csv("LC20_Elev_220.tif", "processed_topo_data.csv", is_fuel_model=False)
-process_raster_to_csv("LC23_F13_240.tif", "processed_fuel_model_data.csv", is_fuel_model=True)
+process_raster_to_csv("/Users/antonioli/Desktop/Wild_Fire_Simulation_and_Prevention/Data/LC20_Elev_220_Big.tif",
+                      "processed_topo_data_Big.csv", is_fuel_model=False)
+process_raster_to_csv("/Users/antonioli/Desktop/Wild_Fire_Simulation_and_Prevention/Data/LC23_F13_240_Big.tif",
+                      "processed_fuel_data_Big.csv", is_fuel_model=True)
