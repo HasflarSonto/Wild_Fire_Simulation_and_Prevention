@@ -2,13 +2,14 @@ import random
 import math
 import heapq
 
-wind_vector = (0, 9)
+wind_vector = (6, 6)
 windVectors = []
 windVectors.append(wind_vector)
 for i in range(9,5,-1):
         newMagnitude = i * 0.10
-        newX = newMagnitude * wind_vector[0] * math.cos(1 - newMagnitude)
-        newY = newMagnitude * wind_vector[1] * math.sin(1 - newMagnitude)
+        newAngle = math.radians(1-newMagnitude)
+        newX = newMagnitude * wind_vector[0] * math.cos(newAngle)
+        newY = newMagnitude * wind_vector[1] * math.sin(newAngle)
         windVectors.append([newX,newY])
 def compute_wind_severity(direction_vector, windVectors):
     """Calculates wind severity in a given direction."""
@@ -48,7 +49,6 @@ def find_fire_start(grid, wind_vector):
     heapq.heapify(hp)
 
     if x < 0 and yInterval:
-        
         for r in yInterval:
             heapq.heappush(hp, [(grid[r][len(grid[0])-1]),(r, len(grid[0])-1)])
     elif x > 0 and yInterval:
@@ -72,7 +72,9 @@ def find_fire_start(grid, wind_vector):
     
     for i in range(random.randint(1, len(hp))):
         res = heapq.heappop(hp)
-    return res[1]
+    row = res[1][0]
+    col = res[1][1]
+    return row, col
     
 
 def calculate_fire_probability(material, direction_vector, wind_vector):
@@ -89,39 +91,39 @@ def spread_fire(grid, wind_vector, steps=10):
     timer = {}
     material_timer = {0.5: 5, 0.4: 5, 0.3: 5, 0.2: 5}
     
-    start = find_fire_start(grid, wind_vector)
-    print(start)
-    # timer[(row, col)] = material_timer[grid[row][col]]
-    # new_fire_grid = [row[:] for row in grid]
-    # new_fire_grid[row][col] = 1  # Fire starts
-    # print("Fire starts at " + str([row,col]))
-    # probabilityMatrix = [[0]*len(grid[0]) for row in grid]
-    # probabilityMatrix[row][col] = 1
-    # coordinates = [(x, y) for x in range(-2, 3) for y in range(-2, 3) if not (x == 0 and y == 0)]
-    # for _ in range(steps):
-    #     #probabilityMatrix = [[0]*len(grid[0]) for row in grid]
-    #     for i in range(rows):
-    #         for j in range(cols):
-    #             if (i,j) in timer: # Tile is on fire
-    #                 timer[(i, j)] -= 1
-    #                 if timer[(i, j)] <= 0:
-    #                     new_fire_grid[i][j] = -1  # Burnt out
-    #                     timer.pop(i,j)
-    #                     continue
-    #                 for di, dj in coordinates:
-    #                     ni, nj = i + di, j + dj
+    row, col = find_fire_start(grid, wind_vector)
 
-    #                     if 0 <= ni < rows and 0 <= nj < cols and (ni,nj) not in timer:
-    #                         material = grid[ni][nj]
-    #                         # #di changes the y
-    #                         # #dj chnages the x
-    #                         new_prob = calculate_fire_probability(material, (dj, -di), windVectors)
-    #                         probabilityMatrix[ni][nj] = max(probabilityMatrix[ni][nj],new_prob)
-    #                         if random.random() < probabilityMatrix[ni][nj]:
-    #                             new_fire_grid[ni][nj] = 1
-    #                             timer[(ni,nj)] = material_timer[material]
+    timer[(row, col)] = material_timer[grid[row][col]]
+    new_fire_grid = [row[:] for row in grid]
+    new_fire_grid[row][col] = 1  # Fire starts
+    print("Fire starts at " + str([row,col]))
+    probabilityMatrix = [[0]*len(grid[0]) for row in grid]
+    probabilityMatrix[row][col] = 1
+    coordinates = [(x, y) for x in range(-2, 3) for y in range(-2, 3) if not (x == 0 and y == 0)]
+    for _ in range(steps):
+        #probabilityMatrix = [[0]*len(grid[0]) for row in grid]
+        for i in range(rows):
+            for j in range(cols):
+                if (i,j) in timer: # Tile is on fire
+                    timer[(i, j)] -= 1
+                    if timer[(i, j)] <= 0:
+                        new_fire_grid[i][j] = -1  # Burnt out
+                        timer.pop(i,j)
+                        continue
+                    for di, dj in coordinates:
+                        ni, nj = i + di, j + dj
 
-    # return new_fire_grid
+                        if 0 <= ni < rows and 0 <= nj < cols and (ni,nj) not in timer:
+                            material = grid[ni][nj]
+                            # #di changes the y
+                            # #dj chnages the x
+                            new_prob = calculate_fire_probability(material, (dj, -di), windVectors)
+                            probabilityMatrix[ni][nj] = max(probabilityMatrix[ni][nj],new_prob)
+                            if random.random() < probabilityMatrix[ni][nj]:
+                                new_fire_grid[ni][nj] = 1
+                                timer[(ni,nj)] = material_timer[material]
+
+    return new_fire_grid
 
 def matrix_to_list(matrix):
     """Converts a 2D matrix back into a structured single list of strings in row-major order."""
