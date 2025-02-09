@@ -2,9 +2,10 @@ import random
 import math
 import heapq
 
-wind_vector = (0,2)
+wind_vector = (2,8)
 windVectors = []
 windVectors.append(wind_vector)
+
 
 
 def compute_wind_severity(direction_vector, wind_vector):
@@ -16,56 +17,125 @@ def compute_wind_severity(direction_vector, wind_vector):
     wind_magnitude = (wind_vector[0]**2 + wind_vector[1]**2) ** 0.5
     wind_unit_vector = (wind_vector[0] / wind_magnitude, wind_vector[1] / wind_magnitude)
     return unit_vector[0] * wind_unit_vector[0] + unit_vector[1] * wind_unit_vector[1]
+
+
 def find_fire_start(grid, wind_vector):
     """Finds fire starting location based on wind direction."""
     x = wind_vector[0]
     y = wind_vector[1]
     
-    #the c's correspond to the interval of x's
+    # Determine x (column) and y (row) intervals
     xInterval = None
     yInterval = None
-    if x > 0:
-        xInterval = [0,x]
-    elif x < 0:
-        xInterval = [ x + len(grid[0]) -1  ,len(grid[0])-1]
     
-    #this is the c
+    # Define column range based on wind direction
+    if x > 0:
+        xInterval = [0, x]  # Fire starts from left
+    elif x < 0:
+        xInterval = [len(grid[0]) - 1 + x, len(grid[0]) - 1]  # Fire starts from right
+    
+    # Define row range based on wind direction
     if y > 0:
-        yInterval = [len(grid) - 1 - y ,len(grid) -1]
+        yInterval = [len(grid) - 1 - y, len(grid) - 1]  # Fire starts from bottom
     elif y < 0:
-        yInterval = [0, abs(y)]
-    #this is the r
+        yInterval = [0, abs(y)]  # Fire starts from top
+    
     hp = []
     heapq.heapify(hp)
 
+    # Process row-based selection (y direction)
     if x < 0 and yInterval:
-        for r in yInterval:
-            heapq.heappush(hp, [grid[r][len(grid[0])-1],(r, len(grid[0])-1)])
+        for r in range(yInterval[0], yInterval[1] + 1):
+            heapq.heappush(hp, [grid[r][len(grid[0]) - 1], (r, len(grid[0]) - 1)])  # Right edge
     elif x > 0 and yInterval:
-        for r in yInterval:
-            heapq.heappush(hp, [grid[r][0],(r, 0)])
+        for r in range(yInterval[0], yInterval[1] + 1):
+            heapq.heappush(hp, [grid[r][0], (r, 0)])  # Left edge
     elif yInterval:
-        
-        for r in yInterval:
-            heapq.heappush(hp, [grid[r][len(grid[0])//2], (r, int(len(grid[0])//2) )])
+        for r in range(yInterval[0], yInterval[1] + 1):
+            heapq.heappush(hp, [grid[r][len(grid[0]) // 2], (r, len(grid[0]) // 2)])  # Middle column
+    
+    # Process column-based selection (x direction)
     if y < 0 and xInterval:
-        for c in xInterval:
-            heapq.heappush(hp, [grid[0][c], (0, c)])
+        for c in range(xInterval[0], xInterval[1] + 1):
+            heapq.heappush(hp, [grid[0][c], (0, c)])  # Top row
     elif y > 0 and xInterval:
-        for c in xInterval:
-            heapq.heappush(hp, [grid[len(grid)-1][c], (len(grid)-1 , c)])
+        for c in range(xInterval[0], xInterval[1] + 1):
+            heapq.heappush(hp, [grid[len(grid) - 1][c], (len(grid) - 1, c)])  # Bottom row
     elif xInterval:
-        heapq.heappush(hp, [grid[int(len(grid)//2)][c], (int(len(grid)//2), c)])
+        for c in range(xInterval[0], xInterval[1] + 1):
+            heapq.heappush(hp, [grid[len(grid) // 2][c], (len(grid) // 2, c)])  # Middle row
+    
+    # Debugging prints to verify selections
+    print("Heap:", hp)
+
+    # Select initial fire point
     res = hp[0][1]
     while len(hp) > 10:
         heapq.heappop(hp)
     
     for i in range(random.randint(1, len(hp))):
         res = heapq.heappop(hp)
-    row = res[1][0]
-    col = res[1][1]
+    
+    row, col = res  # Extract row and column from heap result
     return row, col
 
+
+
+
+
+# def find_fire_start(grid, wind_vector):
+#     """Finds fire starting location based on wind direction."""
+#     x = wind_vector[0]
+#     y = wind_vector[1]
+    
+#     #the c's correspond to the interval of x's
+#     xInterval = None
+#     yInterval = None
+#     if x > 0:
+#         xInterval = [0,x]
+#     elif x < 0:
+#         xInterval = [ x + len(grid[0]) -1  ,len(grid[0])-1]
+    
+#     #this is the c
+#     if y > 0:
+#         yInterval = [len(grid) - 1 - y ,len(grid) -1]
+#     elif y < 0:
+#         yInterval = [0, abs(y)]
+#     #this is the r
+#     hp = []
+#     heapq.heapify(hp)
+
+#     if x < 0 and yInterval:
+#         for r in yInterval:
+#             heapq.heappush(hp, [grid[r][len(grid[0])-1],(r, len(grid[0])-1)])
+#     elif x > 0 and yInterval:
+#         for r in yInterval:
+#             heapq.heappush(hp, [grid[r][0],(r, 0)])
+#     elif yInterval:
+        
+#         for r in yInterval:
+#             heapq.heappush(hp, [grid[r][len(grid[0])//2], (r, int(len(grid[0])//2) )])
+#     if y < 0 and xInterval:
+#         for c in xInterval:
+#             heapq.heappush(hp, [grid[0][c], (0, c)])
+#     elif y > 0 and xInterval:
+#         for c in xInterval:
+#             heapq.heappush(hp, [grid[len(grid)-1][c], (len(grid)-1 , c)])
+#     elif xInterval:
+#         heapq.heappush(hp, [grid[int(len(grid)//2)][c], (int(len(grid)//2), c)])
+#     res = hp[0][1]
+#     while len(hp) > 10:
+#         heapq.heappop(hp)
+    
+#     for i in range(random.randint(1, len(hp))):
+#         res = heapq.heappop(hp)
+#     row = res[1][0]
+#     col = res[1][1]
+#     return row, col
+
+
+# import heapq
+# import random
 def calculate_fire_probability(material, direction_vector, wind_vector):
     """Determines probability of fire spread based on material and wind."""
     prob = material
